@@ -1,0 +1,108 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+__author__ = 'vader666'
+
+"""
+Requirements
+You need install libfcgi:
+in Ubuntu "apt-get install libfcgi0ldbl"
+in Gentoo "emerge dev-libs/fcgi"
+
+How to configure:
+Environment variable:
+env.connectto: Set a connection string as ip:port or socket. Default 127.0.0.1:9000
+
+You can use a named connections if you have more than one php-fpm:
+1. Create simlink: ln -s /path/to/plugins/dir/phpfpm_fcgi_status /etc/munin/plugins/phpfpm_fcgi_status_<name>
+2. Edit in /etc/munin/plugin-conf.d/munin-node environment variables: env.connectto.<name> <host:port or socket>
+"""
+
+import os, sys, commands
+import json
+
+graph_name = ""
+if os.path.basename(__file__) != "phpfpm_fcgi_status": 
+	if "phpfpm_fcgi_status_" in os.path.basename(__file__):
+		graph_name = os.path.basename(__file__).replace("phpfpm_fcgi_status_", "")
+
+
+config = {
+	"graph_title" : 'PHP5-FPM Status %s' % (graph_name),
+	"graph_args" : '--base 1024 -l 0',
+	"graph_vlabel" : 'Connections',
+	"graph_category" : 'PHP',
+	"graph_order" : 'Idle Active Total',
+	"graph_info" : 'Plugin created by vader666 based on TJ Stein',
+	"idle.label" : 'Idle',
+	"idle.draw" : 'AREA',
+	"active.label" : 'Active',
+	"active.draw" : 'AREA',
+	"total.label" : 'Total',
+	"total.draw" : 'STACK',
+}
+
+def get_config():
+	for (key, value) in config.items():
+		print "%s %s" % (key, value)
+
+def get_connectionString():
+	pass
+			
+def run():
+
+	if graph_name and "connectto.%s" % graph_name in os.environ:
+		connectionString =  os.environ["connectto.%s" % graph_name]
+	elif "connectto" in os.environ:
+		connectionString = os.environ["connectto"]
+	else:
+		connectionString = "127.0.0.1:9000"
+
+
+	replay = commands.getstatusoutput('SCRIPT_NAME=/status SCRIPT_FILENAME=/status QUERY_STRING="json" REQUEST_METHOD=GET cgi-fcgi -bind -connect %s' % connectionString)
+
+	if replay[1]:
+		try:
+			fpmjson = replay[1].split('\r\n\r\n')[1]
+		except:
+			exit_with_error("Unexpected response from php. Check php-fpm configuration.")
+	else:
+		exit_with_error("Error. Can't connect to php5-fpm.")
+
+	json_object = json.loads(fpmjson)
+
+	print "idle.value %s" % json_object['idle processes']
+	print "active.value %s" % json_object['active processes']
+	print "total.value %s" % json_object['total processes']
+	
+	sys.exit(0)
+
+def exit_with_error(msg):
+	print msg
+	sys.exit(1)
+
+if __name__ == "__main__":
+
+	if not os.path.exists(r'/usr/bin/cgi-fcgi'):
+		exit_with_error("The \"cgi-fcgi\" not found. You must install \"cgi-fcgi\":\n" \
+			"  in Ubuntu \"apt-get install libfcgi0ldbl\"\n" \
+			"  in Gentoo \"emerge dev-libs/fcgi\"")
+
+		if len(sys.argv) > 1:
+			cmd_name = sys.argv[1]
+		else:   
+			cmd_name = None
+
+		if cmd_name and cmd_name == "autoconfig":
+			print "no"
+			sys.exit(1)
+		elif cmd_name and cmd_name == "suggest":
+			print ""
+			sys.exit(0)
+		elif cmd_name and cmd_name == "config":
+			get_config()
+			sys.exit(0)
+		else:   
+			run()
+			sys.exit(0)
+		exit_with_error("Unsupported command")
