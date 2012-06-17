@@ -88,21 +88,21 @@ if __name__ == "__main__":
 			"  in Ubuntu \"apt-get install libfcgi0ldbl\"\n" \
 			"  in Gentoo \"emerge dev-libs/fcgi\"")
 
-		if len(sys.argv) > 1:
-			cmd_name = sys.argv[1]
-		else:   
-			cmd_name = None
+	if len(sys.argv) > 1:
+		cmd_name = sys.argv[1]
+	else:
+		cmd_name = None
 
-		if cmd_name and cmd_name == "autoconfig":
-			print "no"
-			sys.exit(1)
-		elif cmd_name and cmd_name == "suggest":
-			print ""
-			sys.exit(0)
-		elif cmd_name and cmd_name == "config":
-			get_config()
-			sys.exit(0)
-		else:   
-			run()
-			sys.exit(0)
-		exit_with_error("Unsupported command")
+	if cmd_name and cmd_name == "autoconfig":
+		print "no"
+		sys.exit(1)
+	elif cmd_name and cmd_name == "suggest":
+		print ""
+		sys.exit(0)
+	elif cmd_name and cmd_name == "config":
+		get_config()
+		sys.exit(0)
+	else:
+		run()
+		sys.exit(0)
+	exit_with_error("Unsupported command")
