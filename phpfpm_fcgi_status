@@ -29,17 +29,18 @@ if os.path.basename(__file__) != "phpfpm_fcgi_status":
 
 config = {
 	"graph_title" : 'PHP5-FPM Status %s' % (graph_name),
-	"graph_args" : '--base 1024 -l 0',
+	"graph_args" : '--base 1000 -l 0',
 	"graph_vlabel" : 'Connections',
 	"graph_category" : 'PHP',
 	"graph_order" : 'Idle Active Total',
 	"graph_info" : 'Plugin created by vader666 based on TJ Stein',
+	"graph_printf" : '%6.0lf',
 	"idle.label" : 'Idle',
-	"idle.draw" : 'AREA',
+	"idle.draw" : 'AREASTACK',
 	"active.label" : 'Active',
-	"active.draw" : 'AREA',
+	"active.draw" : 'AREASTACK',
 	"total.label" : 'Total',
-	"total.draw" : 'STACK',
+	"total.draw" : 'LINE2',
 }
 
 def get_config():
